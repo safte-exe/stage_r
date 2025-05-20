@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NB_VAR 10
+#define NB_VAR 4
 
 typedef struct {
     char* name;
