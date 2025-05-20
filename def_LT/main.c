@@ -18,7 +18,7 @@ typedef struct Transition {
     int label_action;
 } Transition;
 
-Transition transitions [max_etats][max_trans_par_etat];
+Transition* transitions [max_etats];
 int nb_trans_par_etat [max_etats] = {0} ;
 
 
@@ -31,11 +31,16 @@ void init_ () {
     actions[1] = "b";
     num_actions = 2;
 
+    transitions [0] = malloc (2 * sizeof(Transition));
     transitions [0][0] = (Transition){.etat_in = 1, .label_action = 0 };
     transitions [0][1] = (Transition){.etat_in = 2, .label_action = 1 };
     nb_trans_par_etat[0] = 2;
+
+    transitions [1] = malloc (1 * sizeof(Transition));
     transitions [1][0] = (Transition){.etat_in = 2, .label_action = 0 };
     nb_trans_par_etat[1] = 1;
+
+
     nb_trans_par_etat[2] = 0;
 
 }
