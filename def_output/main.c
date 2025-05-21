@@ -84,7 +84,7 @@ void init_variables() {
 }
 
 void update_a () {
-        variables[0] = variables[0] > 5 ? variables[0].value++ : 7;
+        variables[0].value = variables[0].value > 5 ? variables[0].value++ : 7;
 }
 
 void update_b() {
@@ -139,13 +139,6 @@ Etat_x* etats_x = NULL;
 int nb_etats_x = 0;
 int capacite_etats_x = 0;
 
-void init_etats_x () {
-
-    capacite_etats_x = 4;
-    etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
-
-    ajouter_etat_x(0, variables); 
-}
 
 
 void ajouter_etat_x(int etat, Variable* vars) {
@@ -156,26 +149,53 @@ void ajouter_etat_x(int etat, Variable* vars) {
 
     etats_x[nb_etats_x].etat = etat;
     for (int i = 0; i < NB_VAR; i++) {
-        etats_x[nb_etats_x].variables[i].nom = vars[i].nom;
-        etats_x[nb_etats_x].variables[i].valeur = vars[i].valeur;
+        etats_x[nb_etats_x].variables[i].name = vars[i].name;
+        etats_x[nb_etats_x].variables[i].value = vars[i].value;
     }
     nb_etats_x++;
 }
 
 
+void init_etats_x () {
+
+    capacite_etats_x = 4;
+    etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
+
+    ajouter_etat_x(0, variables); 
+}
+
+
+int etat_x_exist (Etat_x s) {
+    int exist = 0;
+    int i;
+    Etat_x temp;
+
+    for (i = 0; i < nb_etats_x ; i++ ){
+        temp = etats_x[i];
+        int same_var = 1;
+        if (temp.etat == s.etat){
+            for (int j = 0; j < NB_VAR; j++) {
+               if ( temp.variables[j].value != s.variables[j].value ) { same_var = 0; }
+            }
+            if (same_var == 1) {exist = 1;}
+        }
+    }
+
+    return exist; 
+}
 //// transitions depuis extended etats 
 
 typedef struct Transition_x {
     Etat_x cible;
     int action_id;
-}
+} Transition_x;
 
 Transition_x** transitions_x = NULL;
 int* nb_trans_par_etat_x ;
 int* capacite_trans_x = NULL;
 
 
-void init_transitions_x() {
+void init_lts_x() {
     transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
     nb_trans_par_etat_x = calloc(capacite_etats_x, sizeof(int));
     capacite_trans_x = calloc(capacite_etats_x, sizeof(int));
@@ -185,12 +205,36 @@ void init_transitions_x() {
     }
 }
 
+void ajouter_transiton_x ( Etat_x cible, int action_id) {
+
+}
+
+
+void calculer_transition_depuis_un_etat (){
+
+
+}
 
 
 
 
 
+void print_lts_x(){
+    int i, j;
+    for (i=0; i< num_etats; i++){
+            printf("Depuis l'etat %s :\n", etats_x[i].etat );
+            for (int j = 0; j < NB_VAR; j++) {
+               printf ("\tLa variable %s = %d \n",etats_x[i].variables[j].name , etats_x[i].variables[j].value );
+            }
+            
+             
+            printf("\tLes transitions sortantes:");
+            for (j=0; j< nb_trans_par_etat_x[i] ; j++){
+                printf("\t%s --%s--> %s \n", etats_x[i].etat, actions[transitions_x[i][j].action_id], etats_x[transitions_x[i][j].cible.etat]);
+            }
+    }
 
+}
 
 
 
@@ -209,19 +253,57 @@ int main()
 {
 
     init_lts();
-    print_lts();
+   // print_lts();
 
 
     init_variables();
-    print_variables();
+   // print_variables();
     init_update_functions();
 
-    update(0);
-    update(1);
-    update(2);
-    update(3);
+   // update(0);
+   // update(1);
+   // update(2);
+   // update(3);
 
-    print_variables();
+   // print_variables();
+
+
+   // ---------- États étendus manuels ----------
+capacite_etats_x = 2;
+nb_etats_x = 2;
+etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
+
+for (int i = 0; i < 1 ; i++){
+    etats_x[i].etat = i;
+    for  (int j = 0; j < NB_VAR; j++){
+        etats_x[i].variables[j] =  variables[j];
+    }
+
+}
+
+
+// État 1
+etats_x[1].etat = 1; // s2
+etats_x[1].variables[0] = (Variable){"a", 10};
+etats_x[1].variables[1] = (Variable){"b", 20};
+etats_x[1].variables[2] = (Variable){"c", 30};
+etats_x[1].variables[3] = (Variable){"d", 40};
+
+// ---------- Transitions manuelles ----------
+transitions_x = malloc(2 * sizeof(Transition_x*));
+nb_trans_par_etat_x = calloc(2, sizeof(int));
+capacite_trans_x = calloc(2, sizeof(int));
+
+transitions_x[0] = malloc(sizeof(Transition_x));
+capacite_trans_x[0] = 1;
+nb_trans_par_etat_x[0] = 1;
+
+transitions_x[0][0].cible = etats_x[1];
+transitions_x[0][0].action_id = 0; // action "a"
+
+transitions_x[1] = NULL; // pas de transition depuis etat_x[1]
+
+print_lts_x();
 
     return 0;
 
