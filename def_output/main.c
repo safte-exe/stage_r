@@ -257,7 +257,7 @@ int main()
 
 
     init_variables();
-   // print_variables();
+  //  print_variables();
     init_update_functions();
 
    // update(0);
@@ -273,14 +273,21 @@ capacite_etats_x = 2;
 nb_etats_x = 2;
 etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
 
-for (int i = 0; i < 1 ; i++){
-    etats_x[i].etat = i;
-    for  (int j = 0; j < NB_VAR; j++){
-        etats_x[i].variables[j] =  variables[j];
-    }
+// for (int i = 0; i < 1 ; i++){
+//     etats_x[i].etat = i;
+//     for  (int j = 0; j < NB_VAR; j++){
+//         etats_x[i].variables[j] =  variables[j];
+//     }
 
-}
+// }
 
+
+// État 0
+etats_x[0].etat = 0; // s1
+etats_x[0].variables[0] = (Variable){"a", 1};
+etats_x[0].variables[1] = (Variable){"b", 2};
+etats_x[0].variables[2] = (Variable){"c", 3};
+etats_x[0].variables[3] = (Variable){"d", 4};
 
 // État 1
 etats_x[1].etat = 1; // s2
