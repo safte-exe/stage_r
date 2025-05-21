@@ -84,7 +84,7 @@ void init_variables() {
 }
 
 void update_a () {
-        variables[0].value++;
+        variables[0] = variables[0] > 5 ? variables[0].value++ : 7;
 }
 
 void update_b() {
@@ -137,11 +137,20 @@ typedef struct Etat_x {
 
 Etat_x* etats_x = NULL;
 int nb_etats_x = 0;
-int capacite_etats_x = 10;
+int capacite_etats_x = 0;
+
+void init_etats_x () {
+
+    capacite_etats_x = 4;
+    etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
+
+    ajouter_etat_x(0, variables); 
+}
+
 
 void ajouter_etat_x(int etat, Variable* vars) {
     if (nb_etats_x == capacite_etats_x) {
-        capacite_etats_x =  capacite_etats_x * 2;
+        capacite_etats_x =  ( capacite_etats_x  )* 2;
         etats_x = realloc(etats_x, capacite_etats_x * sizeof(Etat_x));
     }
 
@@ -151,10 +160,6 @@ void ajouter_etat_x(int etat, Variable* vars) {
         etats_x[nb_etats_x].variables[i].valeur = vars[i].valeur;
     }
     nb_etats_x++;
-}
-
-void init_etats_x () {
-
 }
 
 
@@ -169,14 +174,16 @@ Transition_x** transitions_x = NULL;
 int* nb_trans_par_etat_x ;
 int* capacite_trans_x = NULL;
 
-void init_lts_x () {
 
+void init_transitions_x() {
+    transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
+    nb_trans_par_etat_x = calloc(capacite_etats_x, sizeof(int));
+    capacite_trans_x = calloc(capacite_etats_x, sizeof(int));
+
+    for (int i = 0; i < capacite_etats_x; i++) {
+        transitions_x[i] = NULL;
+    }
 }
-
-
-
-
-
 
 
 
