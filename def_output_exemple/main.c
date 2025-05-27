@@ -122,13 +122,23 @@ int nb_etats_x = 0;
 int capacite_etats_x = 0;
 
 int ajouter_etat_x(int etat_id, Variable vars) {
-    if (nb_etats_x == capacite_etats_x) {
-        capacite_etats_x = capacite_etats_x == 0 ? 2 : capacite_etats_x * 2;
-        etats_x = realloc(etats_x, capacite_etats_x * sizeof(Etat_x));
-    }
+    if (etats_x == NULL) {
+    capacite_etats_x = 2;
+    etats_x = malloc(capacite_etats_x * sizeof(Etat_x));
+} else if (nb_etats_x == capacite_etats_x) {
+    capacite_etats_x *= 2;
+    etats_x = realloc(etats_x, capacite_etats_x * sizeof(Etat_x));
+}
+
+    // printf("HAlo\n");
+    printf("je suis à l'etat %d \n ", nb_etats_x);
+    printf("je passe en param l'id  %d \n ", etat_id);
     etats_x[nb_etats_x].etat = etat_id ;
+    printf("HAlo\n");
     etats_x[nb_etats_x].var = vars;
     //printf("Nombre d'etats etendus %d\n ", nb_etats_x);
+            printf("HAlo\n");
+
     return nb_etats_x++;
 }
 
@@ -246,34 +256,47 @@ int main() {
     init_variables();
     init_update_functions();
 
-    // Ajoute etat initial s1
-    ajouter_etat_x(0, variable);
-    capacite_etats_x = 9;
-    init_lts_x();
-   // print_lts_x();
+    printf("A\n");
+capacite_etats_x = 45;
+
+printf("B\n");
+init_lts_x();
+
+printf("C\n");
+ajouter_etat_x(0, variable);
+
+printf("D\n");
+print_lts_x();
+
+printf("E\n");
+printf("voila l'etat xtended num 1 %d\n", etats_x[0].etat);
+
 
   //  printf("########################################\n");
 
     // Appliquer les transitions depuis s1
-    appliquer_transition(0);
+   // appliquer_transition(0);
    // print_lts_x();
   //  printf("########################################\n");
 
 
-    appliquer_transition(1);
+  //  appliquer_transition(1);
   //  print_lts_x();
   //  printf("########################################\n");
 
     
-    appliquer_transition(2);
-    print_lts_x();
-    printf("########################################\n");
+ //   appliquer_transition(2);
+   // print_lts_x();
+   // printf("########################################\n");
 
 
   //  appliquer_transition(1);
 
     // Affichage
   //  print_lts_x();
+  appliquer_transitions();
+    print_lts_x();
+
 
     return 0;
 }
