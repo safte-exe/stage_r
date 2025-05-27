@@ -22,6 +22,20 @@ Transition* transitions [max_etats];
 int nb_trans_par_etat [max_etats] = {0} ;
 
 
+void calculer_successeurs_depuis_transitions(Transition* transitions[], int nb_trans_par_etat[], int num_etats){
+    int i,j;
+
+    for (i = 0; i< num_etats ; i++){
+        for (j= 0; j<nb_trans_par_etat[i]; j++){
+            
+        }
+    }
+}
+
+
+
+
+
 void init_ () {
 
 

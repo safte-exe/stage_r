@@ -1,44 +1,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define nb_actions 4
 #define NB_VAR 4
 
-typedef struct {
-    char* name;
-    int value;
+typedef struct Variable{
+    int x;
+    int y;
+    int z;
 } Variable;
 
-
-Variable variables[NB_VAR];
-
+Variable variable;
 
 void init_variables() {
-    variables[0] = (Variable){"a", 0};
-    variables[1] = (Variable){"b", 1};
-    variables[2] = (Variable){"c", 5};
-    variables[3] = (Variable){"d", 0};
+    variable.x = 0;
+    variable.y = 9;
+    variable.z = 1;
 
 }
 
 void update_a () {
-        variables[0].value++;
+    variable.x++;
+    variable.y--;
+
 }
 
 void update_b() {
-        variables[1].value--;
+    variable.y--;
 }
 
 void update_c() {
-            variables[2].value  =   variables[2].value * 2;
+            variable.x  =   variable.x * 2;
 }
 
 
 void update_d() {
-            variables[3].value = (variables[3].value + 1) % 2;
+            variable.z = ( variable.z + 1) % 2;
 }
 
 typedef void (*UpdateFunction)();
- UpdateFunction update_functions[NB_VAR];
+ UpdateFunction update_functions[nb_actions];
 
 
 void init_update_functions() {
@@ -49,18 +50,11 @@ void init_update_functions() {
 }
 
 
-void update(int index) {
-    if (index >= 0 && index < NB_VAR) {
-        update_functions[index]();
-    } else {
-        printf("index invalide: %d\n", index);
-    }
-}
+void print_variables() { 
 
-void print_variables() {
-    for (int i = 0; i < NB_VAR; i++) {
-        printf("%s = %d\n", variables[i].name, variables[i].value);
-    }
+    printf("x = %d\n", variable.x );
+    printf("y = %d\n", variable.y );
+    printf("z = %d\n", variable.z );
 }
 
 
@@ -70,14 +64,26 @@ int main()
 
     init_variables();
     print_variables();
+    printf("================================\n");
     init_update_functions();
 
-    update(0);
-    update(1);
-    update(2);
-    update(3);
+    update_functions[0]();
+        print_variables();
+
+        printf("================================\n");
+    update_functions[1]();
+        print_variables();
+
+        printf("================================\n");
+    update_functions[2]();
+        print_variables();
+
+        printf("================================\n");
+    update_functions[3]();
 
     print_variables();
+
+        printf("================================\n");
 
     return 0;
 
