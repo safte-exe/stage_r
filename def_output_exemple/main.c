@@ -131,13 +131,13 @@ int ajouter_etat_x(int etat_id, Variable vars) {
 }
 
     // printf("HAlo\n");
-    printf("je suis à l'etat %d \n ", nb_etats_x);
-    printf("je passe en param l'id  %d \n ", etat_id);
+   // printf("je suis à l'etat %d \n ", nb_etats_x);
+    //printf("je passe en param l'id  %d \n ", etat_id);
     etats_x[nb_etats_x].etat = etat_id ;
-    printf("HAlo\n");
+    // printf("HAlo\n");
     etats_x[nb_etats_x].var = vars;
     //printf("Nombre d'etats etendus %d\n ", nb_etats_x);
-            printf("HAlo\n");
+    // printf("HAlo\n");
 
     return nb_etats_x++;
 }
@@ -179,7 +179,7 @@ void init_lts_x() {
 void appliquer_transition(int index_source) {
     Etat_x source = etats_x[index_source];
     int etat_id = etat_exist(source.etat);
-    printf("Etat de LTS org %d\n", etat_id);
+    //printf("Etat de LTS org %d\n", etat_id);
     if (etat_id == -1) return;
 
     for (int i = 0; i < nb_trans_par_etat[etat_id]; i++) {
@@ -201,11 +201,11 @@ void appliquer_transition(int index_source) {
 
         int index_cible = etat_x_exist(cible);
         
-        printf("Etat cible de LTS org %d\n", index_cible);
+     //   printf("Etat cible de LTS org %d\n", index_cible);
 
         if (index_cible == -1)
             index_cible = ajouter_etat_x(cible.etat, cible.var);
-            printf("nouvel etat ajouté cible de LTS org %d\n", index_cible);
+        //    printf("nouvel etat ajouté cible de LTS org %d\n", index_cible);
 
 
         if (transitions_x[index_source] == NULL) {
@@ -225,7 +225,7 @@ void appliquer_transition(int index_source) {
         transitions_x[index_source][nb_trans_par_etat_x[index_source]].cible = index_cible;
         transitions_x[index_source][nb_trans_par_etat_x[index_source]].action_id = t.label_action;
         nb_trans_par_etat_x[index_source]++;
-        printf("nb trna spour l'etat %d est : %d \n",i, nb_trans_par_etat_x[index_source]);
+    //    printf("nb trna spour l'etat %d est : %d \n",i, nb_trans_par_etat_x[index_source]);
     }
 }
 
@@ -236,15 +236,28 @@ void appliquer_transitions () {
         appliquer_transition(i);
     }
 }
-
 void print_lts_x() {
     for (int i = 0; i < nb_etats_x; i++) {
-        printf("Depuis l'etat %d :\n", i);
-        printf("Correspond à l'etat %s :\n", etats [etats_x[i].etat]);
-        printf("\tVariables : v = %d\n", etats_x[i].var.v);
-        for (int j = 0; j < nb_trans_par_etat_x[i]; j++) {
-            printf("\t%s --%s--> %s\n", etats [etats_x[i].etat], actions[transitions_x[i][j].action_id], etats [etats_x[transitions_x[i][j].cible].etat]);
+        
+        printf(" Etat etendu ID #%d\n", i);
+        printf(" Etat de base    : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
+        printf(" Variables       : v = %d\n", etats_x[i].var.v);
+        printf(" Transitions sortantes :\n");
+
+        if (nb_trans_par_etat_x[i] == 0) {
+            printf("   (aucune transition)\n");
         }
+
+        for (int j = 0; j < nb_trans_par_etat_x[i]; j++) {
+            int id_cible = transitions_x[i][j].cible;
+            int action_id = transitions_x[i][j].action_id;
+            printf("   [%s] --%s--> [%s] \n",
+                   etats[etats_x[i].etat],
+                   actions[action_id],
+                   etats[etats_x[id_cible].etat],
+                   id_cible);
+        }
+        printf("\n");
     }
 }
 
@@ -256,20 +269,20 @@ int main() {
     init_variables();
     init_update_functions();
 
-    printf("A\n");
+ //   printf("A\n");
 capacite_etats_x = 45;
 
-printf("B\n");
+// printf("B\n");
 init_lts_x();
 
-printf("C\n");
-ajouter_etat_x(0, variable);
+//printf("C\n");
+//ajouter_etat_x(0, variable);
 
-printf("D\n");
+//printf("D\n");
 print_lts_x();
 
-printf("E\n");
-printf("voila l'etat xtended num 1 %d\n", etats_x[0].etat);
+//printf("E\n");
+//printf("voila l'etat xtended num 1 %d\n", etats_x[0].etat);
 
 
   //  printf("########################################\n");
