@@ -60,7 +60,7 @@ void init_lts() {
 
 
     transitions[3] = malloc(1 * sizeof(Transition));
-    transitions[3][0] = (Transition){.etat_in = 1, .label_action = 2};
+    transitions[3][0] = (Transition){.etat_in = 0, .label_action = 2};
     nb_trans_par_etat[3] = 1;
 
 }
@@ -68,12 +68,13 @@ void init_lts() {
 void print_lts(){
     int i, j;
     for (i=0; i< num_etats; i++){
-            printf("L'etat %d", i);
-            printf(": %s", etats[i] );
-             printf("   a %d transitions sortantes %s :\n", nb_trans_par_etat[i], etats[i] );
+        printf("Etat etendu ID #%d\n", i);
+        printf("\tNom: %s\n", etats[i] );
+             printf("\tTransitions sortantes: %d \n", nb_trans_par_etat[i] );
         for (j=0; j< nb_trans_par_etat[i] ; j++){
-            printf("\t\t%s --%s--> %s \n", etats[i], actions[transitions[i][j].label_action], etats[transitions[i][j].etat_in]);
+            printf("\t\t[%d] --%s--> [%d] \n", i, actions[transitions[i][j].label_action], transitions[i][j].etat_in);
         }
+        printf("\n");
     }
 
 }
@@ -93,14 +94,12 @@ void init_variables() {
     variable.v = 0;
 }
 
-void update_a() { if (variable.v * 2 <= 10 ) {variable.v *= 2;} }
-void update_b() { if (variable.v + 2 <= 10 ) { variable.v += 2;} }
-void update_c() { 
-    //printf("Fonction 3\n");
- }
+Variable update_a( Variable var ) { if (var.v * 2 <= 10 ) { var.v *= 2;} return var; }
+Variable update_b( Variable var ) { if (var.v + 2 <= 10 ) { var.v += 2;} return var; }
+Variable update_c( Variable var ) { return var; }
 
 
-typedef void (*UpdateFunction)();
+typedef Variable (*UpdateFunction)(Variable);
 UpdateFunction update_functions[nb_actions];
 
 void init_update_functions() {
@@ -189,15 +188,16 @@ void appliquer_transition(int index_source) {
 
 
 
+        Etat_x cible;
         // à revoir : allouer espace dedié 
         Variable nouvelles_var = source.var;
-        variable = nouvelles_var;
-        update_functions[t.label_action]();
-        nouvelles_var = variable;
+       // variable = nouvelles_var;
+        cible.var = update_functions[t.label_action](nouvelles_var);
+        //nouvelles_var = variable;
 
-        Etat_x cible;
+        
         cible.etat = t.etat_in;
-        cible.var = nouvelles_var;
+        // cible.var = nouvelles_var;
 
         int index_cible = etat_x_exist(cible);
         
@@ -230,31 +230,34 @@ void appliquer_transition(int index_source) {
 }
 
 
-void appliquer_transitions () {
-    int i;
-    for (i = 0; i < nb_etats_x ; i++){
+void appliquer_transitions() {
+    int i = 0;
+    while (i < nb_etats_x) {
         appliquer_transition(i);
+        i++;
     }
 }
+
+
+
 void print_lts_x() {
     for (int i = 0; i < nb_etats_x; i++) {
         
         printf(" Etat etendu ID #%d\n", i);
-        printf(" Etat de base    : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
-        printf(" Variables       : v = %d\n", etats_x[i].var.v);
-        printf(" Transitions sortantes :\n");
+        printf("\t Etat de base    : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
+        printf("\t Variables       : v = %d\n", etats_x[i].var.v);
+        printf("\t Transitions sortantes :\n");
 
         if (nb_trans_par_etat_x[i] == 0) {
-            printf("   (aucune transition)\n");
+            printf("\t   (aucune transition)\n");
         }
 
         for (int j = 0; j < nb_trans_par_etat_x[i]; j++) {
             int id_cible = transitions_x[i][j].cible;
             int action_id = transitions_x[i][j].action_id;
-            printf("   [%s] --%s--> [%s] \n",
-                   etats[etats_x[i].etat],
+            printf("\t\t   [%d] --%s--> [%d] \n",
+                   i,
                    actions[action_id],
-                   etats[etats_x[id_cible].etat],
                    id_cible);
         }
         printf("\n");
@@ -276,10 +279,10 @@ capacite_etats_x = 45;
 init_lts_x();
 
 //printf("C\n");
-//ajouter_etat_x(0, variable);
+ajouter_etat_x(0, variable);
 
 //printf("D\n");
-print_lts_x();
+ // print_lts();
 
 //printf("E\n");
 //printf("voila l'etat xtended num 1 %d\n", etats_x[0].etat);
@@ -307,8 +310,9 @@ print_lts_x();
 
     // Affichage
   //  print_lts_x();
-  appliquer_transitions();
-    print_lts_x();
+   appliquer_transitions();
+   print_lts_x();
+   printf("%d", nb_etats_x);
 
 
     return 0;
