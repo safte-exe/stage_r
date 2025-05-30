@@ -63,16 +63,42 @@ bool hash_table_insert (personne *p){
     return true;
 }
 
+personne *hash_table_lookup (char* name){
+    int index = hash(name);
+    if (hash_table[index] != NULL
+         && strcmp(name, hash_table[index]->name) == 0){
+            return hash_table[index];
+         }
+    return NULL;
+}
+
  
 void main(){
 
     init_hash_table();
-    print_tableau();
+//    print_tableau();
     personne jacob = {.name = "Jacob", .age = 34};
+    personne nicole = {.name = "Nicole", .age = 34};
+    personne phoa = {.name = "Phoa", .age = 24};
     hash_table_insert(&jacob);
+    hash_table_insert(&nicole);
+    hash_table_insert(&phoa);
 
     print_tableau();
 
+    personne *temp = hash_table_lookup("Meow");
+    if (temp == NULL){
+        printf("Pas trouve! \n");
+    } else {
+        printf("%s Trouve.e \n", temp->name);
+    }
+    
+    temp = hash_table_lookup("Nicole");
+    if (temp == NULL){
+        printf("Pas trouve! \n");
+    } else {
+        printf("%s Trouve.e \n", temp->name);
+    }
     /*
     printf("Jacob => %d \n", hash("Jacob"));
     printf("Mary => %d \n", hash("Mary"));
