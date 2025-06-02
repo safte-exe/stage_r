@@ -8,10 +8,9 @@
 #define MAX_NAME 50
 #define TABLE_TAILLE 10
 
-typedef struct personne {
+typedef struct {
     char name[MAX_NAME];
     int age;
-    struct personne *next;
 
     // ... ajouter des trucs ici 
 }personne;
@@ -34,13 +33,7 @@ void print_tableau() {
             printf("%d \t -----\n",i);
         }
         else {
-            printf("%d \t ", i);
-            personne *tmp = hash_table[i];
-            while (tmp != NULL){
-                printf("%s - ", tmp->name );
-                tmp = tmp->next;
-            }
-            printf("\n");
+            printf("%d \t %s\n", i, hash_table[i]->name);
         }
     }
     printf("Fin\n");
@@ -63,41 +56,34 @@ bool hash_table_insert (personne *p){
     if (p == NULL) return false;
     
     int index = hash (p->name);
-    p->next = hash_table[index];
+    if (hash_table[index] != NULL ) {
+        return false;
+    }
     hash_table[index] = p;
     return true;
 }
 
 personne *hash_table_lookup (char* name){
     int index = hash(name);
-    personne *tmp = hash_table[index];
-
-    while (tmp != NULL && strcmp(tmp->name, name) != 0 ){
-        tmp = tmp->next;
-    }
-
-    return tmp;
+    if (hash_table[index] != NULL
+         && strcmp(name, hash_table[index]->name) == 0){
+            return hash_table[index];
+         }
+    return NULL;
 }
 
 
 personne *hash_table_delete (char *name){
-
     int index = hash(name);
-    personne *tmp = hash_table[index];
-    personne *prev = NULL;
-    while (tmp != NULL && strcmp(tmp->name, name) != 0 ){
-        prev = tmp;
-        tmp = tmp->next;
-    }
+    if (hash_table[index] != NULL
+         && strcmp(name, hash_table[index]->name) == 0){
+            personne *tmp = hash_table[index];
+            hash_table[index] = NULL;
+            return tmp;
+         }
+    return NULL;
+    
 
-    if (tmp == NULL) {return NULL;}
-    if (prev == NULL) {
-        //supprimer la tete de liste 
-        hash_table[index] = tmp->next;
-    } else {
-        prev->next = tmp->next;
-    }
-    return tmp;
 }
 
  
@@ -108,25 +94,9 @@ void main(){
     personne jacob = {.name = "Jacob", .age = 34};
     personne nicole = {.name = "Nicole", .age = 34};
     personne phoa = {.name = "Phoa", .age = 24};
-    personne mia = {.name = "Mia", .age = 24};
-    personne lorent = {.name = "Lorent", .age = 24};
-    personne isa = {.name = "Isabelle", .age = 24};
-    personne david = {.name = "David", .age = 24};
-    personne kyle = {.name = "Kyle", .age = 24};
-    personne laura = {.name = "Laura", .age = 24};
-    personne brie = {.name = "Brie", .age = 24};
-    personne john = {.name = "Johnny", .age = 24};
     hash_table_insert(&jacob);
     hash_table_insert(&nicole);
     hash_table_insert(&phoa);
-    hash_table_insert(&mia);
-    hash_table_insert(&lorent);
-    hash_table_insert(&isa);
-    hash_table_insert(&david);
-    hash_table_insert(&kyle);
-    hash_table_insert(&laura);
-    hash_table_insert(&brie);
-    hash_table_insert(&john);
 
     print_tableau();
 
