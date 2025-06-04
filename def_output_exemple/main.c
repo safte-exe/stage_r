@@ -160,15 +160,15 @@ typedef struct Transition_x {
 } Transition_x;
 
 Transition_x** transitions_x = NULL;
-//int* nb_trans_par_etat_x = NULL;
-//int* capacite_trans_x = NULL;
+int* nb_trans_par_etat_x = NULL;
+int* capacite_trans_x = NULL;
 
 
 
 void init_lts_x() {
     transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
- //   nb_trans_par_etat_x = calloc(capacite_etats_x, sizeof(int));
- //   capacite_trans_x = calloc(capacite_etats_x, sizeof(int));
+    nb_trans_par_etat_x = calloc(capacite_etats_x, sizeof(int));
+    capacite_trans_x = calloc(capacite_etats_x, sizeof(int));
     for (int i = 0; i < capacite_etats_x; i++) {
         transitions_x[i] = NULL;
     }
