@@ -129,14 +129,9 @@ int ajouter_etat_x(int etat_id, Variable vars) {
     etats_x = realloc(etats_x, capacite_etats_x * sizeof(Etat_x));
 }
 
-    // printf("HAlo\n");
-   // printf("je suis à l'etat %d \n ", nb_etats_x);
-    //printf("je passe en param l'id  %d \n ", etat_id);
     etats_x[nb_etats_x].etat = etat_id ;
-    // printf("HAlo\n");
     etats_x[nb_etats_x].var = vars;
-    //printf("Nombre d'etats etendus %d\n ", nb_etats_x);
-    // printf("HAlo\n");
+    
 
     return nb_etats_x++;
 }
@@ -202,10 +197,49 @@ void appliquer_transition1(int index_source) {
 }
 
 
+void appliquer_transition(int index_source) {
+    Etat_x source = etats_x[index_source];
+    int etat_id = source.etat;
+
+    int nb_transitions = nb_trans_par_etat[etat_id];
+
+    // Initialisation dynamique
+    transitions_x[index_source] = malloc(sizeof(Transition_x) * nb_transitions);
+    int count = 0;
+
+    for (int i = 0; i < nb_transitions; i++) {
+        Transition t = transitions[etat_id][i];
+
+        Variable nouvelles_var = source.var;
+        Etat_x cible;
+        cible.var = update_functions[t.label_action](nouvelles_var);
+        cible.etat = t.etat_in;
+
+        // Vérifie que la variable a changé ou respecte la contrainte
+        // (si pas de changement, il est possible que ça boucle infiniment ou bloque l'exploration)
+
+        // Ici, aucune condition, donc ajoute toujours
+        int index_cible = etat_x_exist(cible);
+        if (index_cible == -1) {
+            index_cible = ajouter_etat_x(cible.etat, cible.var);
+        }
+
+        transitions_x[index_source][count].cible = index_cible;
+        transitions_x[index_source][count].action_id = t.label_action;
+
+        count++;
+    }
+
+    // Sauvegarde du vrai nombre de transitions créées
+    nb_trans_par_etat_x[index_source] = count;
+}
+
+
+
 void appliquer_transitions() {
     int i = 0;
     while (i < nb_etats_x) {
-        appliquer_transition1(i);
+        appliquer_transition(i);
         i++;
     }
 }
@@ -223,7 +257,7 @@ void print_lts_x() {
 
         
 
-        for (int j = 0; j < nb_trans_par_etat[etats_x[i].etat]; j++) {
+        for (int j = 0; j < nb_trans_par_etat_x[i]; j++) {
             int id_cible = transitions_x[i][j].cible;
             int action_id = transitions_x[i][j].action_id;
             printf("\t\t   [%d] --%s--> [%d] \n",
