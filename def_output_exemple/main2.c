@@ -118,11 +118,17 @@ void init_constraints() {
 }
 
 
-int nb_trans_applicables (int etat, Variable var){
-    int val;
-    for (int i= 0; i < nb_trans_par_etat[etat]; i++){if (constraints[i](var)) {val++;}}
+int nb_trans_applicables(int etat, Variable var){
+    int val = 0;
+    for (int i = 0; i < nb_trans_par_etat[etat]; i++) {
+        int action = transitions[etat][i].label_action;
+        if (constraints[action](var)) {
+            val++;
+        }
+    }
     return val;
 }
+
 
 
 
@@ -191,22 +197,24 @@ void init_lts_x() {
     }
 }
 
+
 void appliquer_transition1(int index_source) {
-    Etat_x source = etats_x[index_source];
-    int etat_id = source.etat;
-
     int nb_transitions = nb_trans_par_etat[etat_id];
-    transitions_x[index_source] = malloc(nb_transitions * sizeof(Transition_x));
-
-    for (int i = 0; i < nb_transitions; i++) {
-
-        Transition t = transitions[etat_id][i];
-        Variable nouvelles_var = update_functions[t.label_action](source.var);
+transitions_x[index_source] = malloc(nb_transitions * sizeof(Transition_x));
+int j = 0;
+for (int i = 0; i < nb_transitions; i++) {
+    Transition t = transitions[etat_id][i];
+    int action = t.label_action;
+    if (constraints[action](source.var)) {
+        Variable nouvelles_var = update_functions[action](source.var);
         int index_cible = ajouter_etat_x(t.etat_in, nouvelles_var);
 
-        transitions_x[index_source][i].cible = index_cible;
-        transitions_x[index_source][i].action_id = t.label_action;
+        transitions_x[index_source][j].cible = index_cible;
+        transitions_x[index_source][j].action_id = action;
+        j++;
     }
+}
+
 }
 
 void appliquer_transitions() {
