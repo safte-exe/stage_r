@@ -86,9 +86,9 @@ Variable variable;
 
 void init_variables() { variable.v = 0; }
 
-Variable update_a(Variable var) { if (var.v + 2 <= 500000 && var.v + 2 >= -500000) var.v += 2; return var; }
-Variable update_b(Variable var) { if (var.v - 1 <= 500000 && var.v - 1 >= -500000) var.v -= 1; return var; }
-Variable update_c(Variable var) { if (var.v * 2 <= 500000 && var.v * 2 >= -500000) var.v *= 2; return var; }
+Variable update_a(Variable var) { if (var.v + 2 <= 50 && var.v + 2 >= -50) var.v += 2; return var; }
+Variable update_b(Variable var) { if (var.v - 1 <= 50 && var.v - 1 >= -50) var.v -= 1; return var; }
+Variable update_c(Variable var) { if (var.v * 2 <= 50 && var.v * 2 >= -50) var.v *= 2; return var; }
 
 
 
@@ -120,9 +120,13 @@ void init_constraints() {
 
 int nb_trans_applicables(int etat, Variable var){
     int val = 0;
+    
+    
     for (int i = 0; i < nb_trans_par_etat[etat]; i++) {
+        
         int action = transitions[etat][i].label_action;
-        if (constraints[action](var)) {
+       
+        if (constraints[action](var) == true) {
             val++;
         }
     }
@@ -189,33 +193,53 @@ typedef struct Transition_x {
 } Transition_x;
 
 Transition_x** transitions_x = NULL;
+int* nb_trans_x = NULL;
+
+
 
 void init_lts_x() {
     transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
+    nb_trans_x = malloc(capacite_etats_x * sizeof(int));
     for (int i = 0; i < capacite_etats_x; i++) {
         transitions_x[i] = NULL;
+        nb_trans_x[i] = 0;
     }
 }
+
 
 
 void appliquer_transition1(int index_source) {
+    Etat_x source = etats_x[index_source];
+    int etat_id = source.etat;
     int nb_transitions = nb_trans_par_etat[etat_id];
-transitions_x[index_source] = malloc(nb_transitions * sizeof(Transition_x));
-int j = 0;
-for (int i = 0; i < nb_transitions; i++) {
-    Transition t = transitions[etat_id][i];
-    int action = t.label_action;
-    if (constraints[action](source.var)) {
-        Variable nouvelles_var = update_functions[action](source.var);
-        int index_cible = ajouter_etat_x(t.etat_in, nouvelles_var);
 
-        transitions_x[index_source][j].cible = index_cible;
-        transitions_x[index_source][j].action_id = action;
-        j++;
+    int nb_valides = nb_trans_applicables(etat_id, source.var);
+    nb_trans_x[index_source] = nb_valides;
+
+    
+    if (nb_valides == 0) {
+        transitions_x[index_source] = NULL;
+        return;
+    }
+
+    transitions_x[index_source] = malloc(nb_valides * sizeof(Transition_x));
+ 
+    
+    int k = 0;
+    for (int i = 0; i < nb_transitions; i++) {
+        Transition t = transitions[etat_id][i];
+        int action = t.label_action;
+
+        if (constraints[action](source.var)) {
+            Variable nouvelles_var = update_functions[action](source.var);
+            int index_cible = ajouter_etat_x(t.etat_in, nouvelles_var);
+            transitions_x[index_source][k].cible = index_cible;
+            transitions_x[index_source][k].action_id = action;
+            k++;
+        }
     }
 }
 
-}
 
 void appliquer_transitions() {
     int i = 0;
@@ -232,30 +256,28 @@ void print_lts_x() {
         printf("\t Variables       : v = %d\n", etats_x[i].var.v);
         printf("\t Transitions sortantes :\n");
 
-        for (int j = 0; j < nb_trans_par_etat[etats_x[i].etat]; j++) {
+        for (int j = 0; j < nb_trans_x[i]; j++) {
             int id_cible = transitions_x[i][j].cible;
             int action_id = transitions_x[i][j].action_id;
-            printf("\t\t   [%d] --%s--> [%d] \n",
-                   i,
-                   actions[action_id],
-                   id_cible);
+            printf("\t\t   [%d] --%s--> [%d] \n", i, actions[action_id], id_cible);
         }
+
         printf("\n");
     }
 }
-
 // MAIN
 int main() {
     init_lts();
     init_variables();
     init_update_functions();
+    init_constraints();
 
-    capacite_etats_x = 1000000000;
+    capacite_etats_x = 10000;
     init_lts_x();
     ajouter_etat_x(0, variable);
     appliquer_transitions();
-   // print_lts_x();
-    printf("Nombre total d'états étendus : %d\n", nb_etats_x);
+    print_lts_x();
+    printf("Nombre total d'etats etendus : %d\n", nb_etats_x);
 
     return 0;
 }
