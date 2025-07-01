@@ -95,27 +95,23 @@ typedef struct {
 Interval intersect_interval(Interval a, Interval b) {
     Interval result;
 
-    if (a.lower > b.lower) {
-        result.lower = a.lower;
-        result.lower_closed = a.lower_closed;
-    } else if (a.lower < b.lower) {
-        result.lower = b.lower;
-        result.lower_closed = b.lower_closed;
-    } else {
-        result.lower = a.lower;
-        result.lower_closed = a.lower_closed && b.lower_closed;
-    }
+    result.lower = (a.lower > b.lower) ? a.lower : b.lower;
+    result.upper = (a.upper < b.upper) ? a.upper : b.upper;
 
-    if (a.upper < b.upper) {
-        result.upper = a.upper;
-        result.upper_closed = a.upper_closed;
-    } else if (a.upper > b.upper) {
-        result.upper = b.upper;
-        result.upper_closed = b.upper_closed;
-    } else {
-        result.upper = a.upper;
+    if (a.lower == b.lower)
+        result.lower_closed = a.lower_closed && b.lower_closed;
+    else if (result.lower == a.lower)
+        result.lower_closed = a.lower_closed;
+    else
+        result.lower_closed = b.lower_closed;
+
+    if (a.upper == b.upper)
         result.upper_closed = a.upper_closed && b.upper_closed;
-    }
+    else if (result.upper == a.upper)
+        result.upper_closed = a.upper_closed;
+    else
+        result.upper_closed = b.upper_closed;
+
     return result;
 }
 
