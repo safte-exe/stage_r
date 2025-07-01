@@ -7,7 +7,7 @@
 #define max_etats 50
 #define max_actions 20
 #define max_trans_par_etat 50
-#define NB_VAR 1
+#define VAR_COUNT 1
 #define nb_actions 3
 
 // Definition du LTS de base 
@@ -77,79 +77,134 @@ void init_lts() {
     nb_trans_par_etat[10] = 1;
 }
 
-// Définition des variables
-typedef struct Variable {
-    int v;
-} Variable;
+// Gestion des intervalles et valuations
 
-Variable variable;
+typedef struct {
+    int lower;
+    int upper;
+    bool lower_closed;
+    bool upper_closed;
+} Interval;
 
-void init_variables() { variable.v = 0; }
+typedef struct {
+    Interval vars[VAR_COUNT];
+} Valuation;
 
-Variable update_a(Variable var) { if (var.v + 2 <= 50 && var.v + 2 >= -50) var.v += 2; return var; }
-Variable update_b(Variable var) { if (var.v - 1 <= 50 && var.v - 1 >= -50) var.v -= 1; return var; }
-Variable update_c(Variable var) { if (var.v * 2 <= 50 && var.v * 2 >= -50) var.v *= 2; return var; }
+// Intersections
 
+Interval intersect_interval(Interval a, Interval b) {
+    Interval result;
 
-
-typedef Variable (*UpdateFunction)(Variable);
-UpdateFunction update_functions[nb_actions];
-
-void init_update_functions() {
-    update_functions[0] = update_a;
-    update_functions[1] = update_b;
-    update_functions[2] = update_c;
-}
-
-//Défenition des contraintes 
-
-bool const_a(Variable var) { return true; }
-bool const_b(Variable var) { if (var.v > 0) return true; return false;}
-bool const_c(Variable var) { if (var.v <= 0) return true; return false;}
-
-
-typedef bool (*Constraint)(Variable);
-Constraint constraints[nb_actions];
-
-void init_constraints() {
-    constraints[0] = const_a;
-    constraints[1] = const_b;
-    constraints[2] = const_c;
-}
-
-
-int nb_trans_applicables(int etat, Variable var){
-    int val = 0;
-    
-    
-    for (int i = 0; i < nb_trans_par_etat[etat]; i++) {
-        
-        int action = transitions[etat][i].label_action;
-       
-        if (constraints[action](var) == true) {
-            val++;
-        }
+    if (a.lower > b.lower) {
+        result.lower = a.lower;
+        result.lower_closed = a.lower_closed;
+    } else if (a.lower < b.lower) {
+        result.lower = b.lower;
+        result.lower_closed = b.lower_closed;
+    } else {
+        result.lower = a.lower;
+        result.lower_closed = a.lower_closed && b.lower_closed;
     }
-    return val;
+
+    if (a.upper < b.upper) {
+        result.upper = a.upper;
+        result.upper_closed = a.upper_closed;
+    } else if (a.upper > b.upper) {
+        result.upper = b.upper;
+        result.upper_closed = b.upper_closed;
+    } else {
+        result.upper = a.upper;
+        result.upper_closed = a.upper_closed && b.upper_closed;
+    }
+    return result;
 }
 
+Valuation intersect_valuation(const Valuation* v1, const Valuation* v2) {
+    Valuation out;
+    for (int i = 0; i < VAR_COUNT; i++) {
+        out.vars[i] = intersect_interval(v1->vars[i], v2->vars[i]);
+    }
+    return out;
+}
 
+bool is_empty_interval(Interval ivl) {
+    if (ivl.lower > ivl.upper) return true;
+    if (ivl.lower == ivl.upper && (!ivl.lower_closed || !ivl.upper_closed)) return true;
+    return false;
+}
 
+bool is_empty_valuation(const Valuation* v) {
+    for (int i = 0; i < VAR_COUNT; i++) {
+        if (is_empty_interval(v->vars[i])) return true;
+    }
+    return false;
+}
 
-// Définition de l'état étendu
+// Fonctions d'update
+
+typedef Valuation (*UpdateFunction)(const Valuation*);
+
+Valuation update_a(const Valuation* in) {
+    Valuation out = *in;
+    out.vars[0].lower += 2;
+    out.vars[0].upper += 2;
+    return out;
+}
+
+Valuation update_b(const Valuation* in) {
+    Valuation out = *in;
+    out.vars[0].lower -= 1;
+    out.vars[0].upper -= 1;
+    return out;
+}
+
+Valuation update_c(const Valuation* in) {
+    Valuation out = *in;
+    out.vars[0].lower *= 2;
+    out.vars[0].upper *= 2;
+    return out;
+}
+
+UpdateFunction update_functions[nb_actions] = {update_a, update_b, update_c};
+
+// Contraintes sous forme de valuations (intervalles)
+
+typedef Valuation (*Constraint)();
+
+Valuation const_a() {
+    Valuation v;
+    v.vars[0] = (Interval){-50, 50, true, true};
+    return v;
+}
+
+Valuation const_b() {
+    Valuation v;
+    v.vars[0] = (Interval){-50, 50, true, true};
+    return v;
+}
+
+Valuation const_c() {
+    Valuation v;
+    v.vars[0] = (Interval){-50, 50, true, true};
+    return v;
+}
+
+Constraint constraints[nb_actions] = {const_a, const_b, const_c};
+
+// Definition de l'état étendu
 typedef struct Etat_x {
     int etat;
-    Variable var;
+    Valuation val;
 } Etat_x;
 
 Etat_x* etats_x = NULL;
 int nb_etats_x = 0;
-int capacite_etats_x = 0;
+int capacite_etats_x ;
 
 // Table de hachage
 typedef struct {
     int etat;
-    Variable v;
+    Valuation val;
 } EtatXKey;
 
 typedef struct {
@@ -160,8 +215,8 @@ typedef struct {
 
 EtatXHash* etats_x_hash = NULL;
 
-int ajouter_etat_x(int etat_id, Variable vars) {
-    EtatXKey key = {etat_id, vars};
+int ajouter_etat_x(int etat_id, Valuation val) {
+    EtatXKey key = {etat_id, val};
     EtatXHash* s;
 
     HASH_FIND(hh, etats_x_hash, &key, sizeof(EtatXKey), s);
@@ -176,7 +231,7 @@ int ajouter_etat_x(int etat_id, Variable vars) {
     }
 
     etats_x[nb_etats_x].etat = etat_id;
-    etats_x[nb_etats_x].var = vars;
+    etats_x[nb_etats_x].val = val;
 
     s = malloc(sizeof(EtatXHash));
     s->key = key;
@@ -195,9 +250,9 @@ typedef struct Transition_x {
 Transition_x** transitions_x = NULL;
 int* nb_trans_x = NULL;
 
-
-
 void init_lts_x() {
+    
+    
     transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
     nb_trans_x = malloc(capacite_etats_x * sizeof(int));
     for (int i = 0; i < capacite_etats_x; i++) {
@@ -206,40 +261,58 @@ void init_lts_x() {
     }
 }
 
-
+bool is_transition_applicable(int etat, const Valuation* val, int action) {
+    Valuation garde = constraints[action]();
+    Valuation inter = intersect_valuation(val, &garde);
+    return !is_empty_valuation(&inter);
+}
 
 void appliquer_transition1(int index_source) {
+
+
     Etat_x source = etats_x[index_source];
     int etat_id = source.etat;
     int nb_transitions = nb_trans_par_etat[etat_id];
 
-    int nb_valides = nb_trans_applicables(etat_id, source.var);
+    // Compter transitions valides
+    int nb_valides = 0;
+    for (int i = 0; i < nb_transitions; i++) {
+        int action = transitions[etat_id][i].label_action;
+        if (is_transition_applicable(etat_id, &source.val, action)) {
+            nb_valides++;
+        }
+    }
+    
     nb_trans_x[index_source] = nb_valides;
 
     
+
     if (nb_valides == 0) {
         transitions_x[index_source] = NULL;
         return;
     }
 
+    
     transitions_x[index_source] = malloc(nb_valides * sizeof(Transition_x));
- 
+
     
     int k = 0;
     for (int i = 0; i < nb_transitions; i++) {
         Transition t = transitions[etat_id][i];
         int action = t.label_action;
 
-        if (constraints[action](source.var)) {
-            Variable nouvelles_var = update_functions[action](source.var);
-            int index_cible = ajouter_etat_x(t.etat_in, nouvelles_var);
-            transitions_x[index_source][k].cible = index_cible;
-            transitions_x[index_source][k].action_id = action;
-            k++;
-        }
+        
+        Valuation garde = constraints[action]();
+        Valuation inter = intersect_valuation(&source.val, &garde);
+        if (is_empty_valuation(&inter)) continue;
+
+        Valuation val_apres = update_functions[action](&inter);
+        int index_cible = ajouter_etat_x(t.etat_in, val_apres);
+        transitions_x[index_source][k].cible = index_cible;
+        transitions_x[index_source][k].action_id = action;
+        k++;
     }
 }
-
 
 void appliquer_transitions() {
     int i = 0;
@@ -249,35 +322,49 @@ void appliquer_transitions() {
     }
 }
 
+void afficher_valuation(const Valuation* v) {
+     printf("\t Variables       : v =");
+    for (int i = 0; i < VAR_COUNT; i++) {
+        Interval ivl = v->vars[i];
+        printf("[");
+        printf(ivl.lower_closed ? "%d" : "(%d", ivl.lower);
+        printf(",");
+        printf(ivl.upper_closed ? "%d" : "%d)", ivl.upper);
+        printf("]\n");
+    }
+}
+
+
 void print_lts_x() {
     for (int i = 0; i < nb_etats_x; i++) {
         printf("Etat etendu ID #%d\n", i);
         printf("\t Etat de base    : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
-        printf("\t Variables       : v = %d\n", etats_x[i].var.v);
+        afficher_valuation(&etats_x[i].val);
         printf("\t Transitions sortantes :\n");
 
         for (int j = 0; j < nb_trans_x[i]; j++) {
             int id_cible = transitions_x[i][j].cible;
             int action_id = transitions_x[i][j].action_id;
-            printf("\t\t   [%d] --%s--> [%d] \n", i, actions[action_id], id_cible);
+            printf("\t\t   [%d] --%s--> [%d]\n", i, actions[action_id], id_cible);
         }
-
         printf("\n");
     }
 }
-// MAIN
+
+
 int main() {
     init_lts();
-    init_variables();
-    init_update_functions();
-    init_constraints();
-
-    capacite_etats_x = 10000;
+    
+    capacite_etats_x = 10000;  
     init_lts_x();
-    ajouter_etat_x(0, variable);
+
+    Valuation val_init;
+    val_init.vars[0] = (Interval){3, 9, true, true}; // état initial valuation ponctuelle
+    ajouter_etat_x(0, val_init);
+
     appliquer_transitions();
-  //  print_lts_x();
-    printf("Nombre total d'etats etendus : %d\n", nb_etats_x);
+
+    print_lts_x();
 
     return 0;
 }
