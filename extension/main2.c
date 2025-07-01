@@ -115,7 +115,7 @@ Interval intersect_interval(Interval a, Interval b) {
     return result;
 }
 
-Valuation intersect_valuation(const Valuation* v1, const Valuation* v2) {
+Valuation intersect_valuation(Valuation* v1, Valuation* v2) {
     Valuation out;
     for (int i = 0; i < VAR_COUNT; i++) {
         out.vars[i] = intersect_interval(v1->vars[i], v2->vars[i]);
@@ -129,7 +129,7 @@ bool is_empty_interval(Interval ivl) {
     return false;
 }
 
-bool is_empty_valuation(const Valuation* v) {
+bool is_empty_valuation(Valuation* v) {
     for (int i = 0; i < VAR_COUNT; i++) {
         if (is_empty_interval(v->vars[i])) return true;
     }
@@ -138,34 +138,36 @@ bool is_empty_valuation(const Valuation* v) {
 
 // Fonctions d'update
 
-typedef Valuation (*UpdateFunction)(const Valuation*);
 
-Valuation update_a(const Valuation* in) {
+Valuation update_a(Valuation* in) {
     Valuation out = *in;
     out.vars[0].lower += 2;
     out.vars[0].upper += 2;
     return out;
 }
 
-Valuation update_b(const Valuation* in) {
+Valuation update_b(Valuation* in) {
     Valuation out = *in;
     out.vars[0].lower -= 1;
     out.vars[0].upper -= 1;
     return out;
 }
 
-Valuation update_c(const Valuation* in) {
+Valuation update_c(Valuation* in) {
     Valuation out = *in;
     out.vars[0].lower *= 2;
     out.vars[0].upper *= 2;
     return out;
 }
 
+typedef Valuation (*UpdateFunction)(Valuation*);
+
 UpdateFunction update_functions[nb_actions] = {update_a, update_b, update_c};
 
-// Contraintes sous forme de valuations (intervalles)
 
-typedef Valuation (*Constraint)();
+
+// Contraintes sous forme de valuations 
+
 
 Valuation const_a() {
     Valuation v;
@@ -185,7 +187,9 @@ Valuation const_c() {
     return v;
 }
 
+typedef Valuation (*Constraint)();
 Constraint constraints[nb_actions] = {const_a, const_b, const_c};
+
 
 // Definition de l'état étendu
 typedef struct Etat_x {
@@ -257,7 +261,7 @@ void init_lts_x() {
     }
 }
 
-bool is_transition_applicable(int etat, const Valuation* val, int action) {
+bool is_transition_applicable(int etat, Valuation* val, int action) {
     Valuation garde = constraints[action]();
     Valuation inter = intersect_valuation(val, &garde);
     return !is_empty_valuation(&inter);
@@ -270,7 +274,7 @@ void appliquer_transition1(int index_source) {
     int etat_id = source.etat;
     int nb_transitions = nb_trans_par_etat[etat_id];
 
-    // Compter transitions valides
+    
     int nb_valides = 0;
     for (int i = 0; i < nb_transitions; i++) {
         int action = transitions[etat_id][i].label_action;
@@ -318,7 +322,7 @@ void appliquer_transitions() {
     }
 }
 
-void afficher_valuation(const Valuation* v) {
+void afficher_valuation(Valuation* v) {
      printf("\t Variables       : v =");
     for (int i = 0; i < VAR_COUNT; i++) {
         Interval ivl = v->vars[i];
@@ -361,6 +365,7 @@ int main() {
     appliquer_transitions();
 
     print_lts_x();
+  printf("Nombre d'etats = %d", nb_etats_x);
 
     return 0;
 }
