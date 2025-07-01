@@ -4,34 +4,59 @@
 #include <stdbool.h>
 #include "uthash.h"
 
-#define max_etats 50
-#define max_actions 20
-#define max_trans_par_etat 50
-#define NB_VAR 1
-#define nb_actions 3
-
-// Definition du LTS de base 
-char* etats[max_etats];
-int num_etats;
-char* actions[max_actions];
+//////Définition des types
 
 typedef struct Transition {
     int etat_in;
     int label_action;
 } Transition;
 
-Transition* transitions[max_etats];
-int nb_trans_par_etat[max_etats] = {0};
+typedef struct Variable {
+    int v;
+} Variable;
 
+typedef Variable (*UpdateFunction)(Variable);
+
+typedef bool (*Constraint)(Variable);
+
+////// Definition du modele
+
+////Declaration des variables 
+#define nb_etats 11
+#define nb_actions 3
+
+
+char* etats[nb_etats];//Etats du LTS
+char* actions[nb_actions];//Actions du LTS
+int nb_trans_par_etat[nb_etats];//Nb de transitions sortantes pour chaque état
+Transition* transitions[nb_etats];//Transitions sortantes de chaque état
+Variable variable;//Data variables
+UpdateFunction update_functions[nb_actions];//Fonctions d'update
+Constraint constraints[nb_actions];//Contraintes
+
+
+////Initialisation LTS 
 void init_lts() {
-    etats[0] = "l0l1"; etats[1] = "l1l3"; etats[2] = "l0l40";
-    etats[3] = "l2l3"; etats[4] = "l0l3"; etats[5] = "l1l4";
-    etats[6] = "l0l3"; etats[7] = "l2l4"; etats[8] = "l0l41";
-    etats[9] = "l1l3"; etats[10] = "l2l3";
 
-    num_etats = 11;
-    actions[0] = "a"; actions[1] = "b"; actions[2] = "c";
+    //Initialisation etats
+    etats[0] = "l0l1";
+    etats[1] = "l1l3";
+    etats[2] = "l0l40";
+    etats[3] = "l2l3";
+    etats[4] = "l0l3";
+    etats[5] = "l1l4";
+    etats[6] = "l0l3";
+    etats[7] = "l2l4";
+    etats[8] = "l0l41";
+    etats[9] = "l1l3";
+    etats[10] = "l2l3";
 
+    //Initialisation actions
+    actions[0] = "a";
+    actions[1] = "b";
+    actions[2] = "c";
+
+    //Initialisation transitions
     transitions[0] = malloc(3 * sizeof(Transition));
     transitions[0][0] = (Transition){1, 0}; transitions[0][1] = (Transition){2, 2}; transitions[0][2] = (Transition){3, 0};
     nb_trans_par_etat[0] = 3;
@@ -77,39 +102,17 @@ void init_lts() {
     nb_trans_par_etat[10] = 1;
 }
 
-// Définition des intervalles (à la place de Variable)
-typedef struct Intervalle {
-    int min;
-    int max;
-} Intervalle;
+////Initialisation data 
 
-// On initialise l'intervalle de départ
-Intervalle intervalle_initial = {0, 0};
-
-// Fonctions d'update pour les intervalles
-Intervalle update_a(Intervalle inter) {
-    Intervalle res;
-    res.min = inter.min + 2;
-    res.max = inter.max + 5;
-    return res;
+//Initialisation data variables
+void init_variables() { 
+    variable.v = 0;
 }
 
-Intervalle update_b(Intervalle inter) {
-    Intervalle res;
-    res.min = inter.min - 1;
-    res.max = inter.max - 1;
-    return res;
-}
-
-Intervalle update_c(Intervalle inter) {
-    Intervalle res;
-    res.min = inter.min * 2;
-    res.max = inter.max * 3;
-    return res;
-}
-
-typedef Intervalle (*UpdateIntervalle)(Intervalle);
-UpdateIntervalle update_functions[nb_actions];
+//Initialisation des fonctions
+Variable update_a(Variable var) { if (var.v + 2 <= 50 && var.v + 2 >= -50) var.v += 2; return var; }
+Variable update_b(Variable var) { if (var.v - 1 <= 50 && var.v - 1 >= -50) var.v -= 1; return var; }
+Variable update_c(Variable var) { if (var.v * 2 <= 50 && var.v * 2 >= -50) var.v *= 2; return var; }
 
 void init_update_functions() {
     update_functions[0] = update_a;
@@ -117,13 +120,11 @@ void init_update_functions() {
     update_functions[2] = update_c;
 }
 
-// Contraintes sur les intervalles
-bool const_a(Intervalle inter) { return true; }
-bool const_b(Intervalle inter) { return inter.min > 0; }
-bool const_c(Intervalle inter) { return inter.max <= 20; }
+//Initialisation des contraintes
+bool const_a(Variable var) { return true; }
+bool const_b(Variable var) { if (var.v > 0) return true; return false;}
+bool const_c(Variable var) { if (var.v <= 0) return true; return false;}
 
-typedef bool (*ConstraintIntervalle)(Intervalle);
-ConstraintIntervalle constraints[nb_actions];
 
 void init_constraints() {
     constraints[0] = const_a;
@@ -131,48 +132,51 @@ void init_constraints() {
     constraints[2] = const_c;
 }
 
-// nombre de transitions applicables selon la contrainte
-int nb_trans_applicables(int etat, Intervalle inter) {
-    int val = 0;
-    for (int i = 0; i < nb_trans_par_etat[etat]; i++) {
-        int action = transitions[etat][i].label_action;
-        if (constraints[action](inter)) {
-            val++;
-        }
-    }
-    return val;
-}
+////// Semantics (construction de l'espace des etats)
 
-// Définition de l'état étendu avec intervalle
+////Définition des types
+
+//Etat étendu
 typedef struct Etat_x {
     int etat;
-    Intervalle inter;
+    Variable var;
 } Etat_x;
 
-Etat_x* etats_x = NULL;
-int nb_etats_x = 0;
-int capacite_etats_x = 0;
-
-// Table de hachage
+//Cle de hachage
 typedef struct {
     int etat;
-    Intervalle inter;
+    Variable v;
 } EtatXKey;
 
+//Table de hachage
 typedef struct {
     EtatXKey key;
     int index;
     UT_hash_handle hh;
 } EtatXHash;
 
-EtatXHash* etats_x_hash = NULL;
+// Transitions étendues
+typedef struct Transition_x {
+    int cible;
+    int action_id;
+} Transition_x;
 
-// Pour comparer Intervalle dans le hash, on définit une fonction d'égalité
-// (UTHASH compare bytes directly so size must match and values must be consistent)
-// Ici on fera un memcpy d'Intervalle dans EtatXKey et utilisera la taille totale comme clé.
 
-int ajouter_etat_x(int etat_id, Intervalle inter) {
-    EtatXKey key = {etat_id, inter};
+////Declaration des variables
+Etat_x* etats_x;//Tableau des états de l'espace des états
+int nb_etats_x;//Taille de l'espace des états
+int capacite_etats_x;//Capacité de etats_x (Nb max d'états pouvant être stocké dans etats_x)
+
+
+EtatXHash* etats_x_hash;//Table de hachage
+
+Transition_x** transitions_x;//Tableau contenant pour chaque état de l'espace des états le tableau de ses transitions sortantes
+int* nb_trans_x;//Nb de transitions sortantes pour chaque état de l'espace de états
+
+////Fonctions de la semantique
+
+int ajouter_etat_x(int etat_id, Variable vars) {
+    EtatXKey key = {etat_id, vars};
     EtatXHash* s;
 
     HASH_FIND(hh, etats_x_hash, &key, sizeof(EtatXKey), s);
@@ -187,26 +191,15 @@ int ajouter_etat_x(int etat_id, Intervalle inter) {
     }
 
     etats_x[nb_etats_x].etat = etat_id;
-    etats_x[nb_etats_x].inter = inter;
+    etats_x[nb_etats_x].var = vars;
 
     s = malloc(sizeof(EtatXHash));
     s->key = key;
     s->index = nb_etats_x;
     HASH_ADD(hh, etats_x_hash, key, sizeof(EtatXKey), s);
 
-    printf(">> Ajout nouvel état étendu ID #%d : etat=%d, intervalle=[%d, %d]\n", nb_etats_x, etat_id, inter.min, inter.max);
-
     return nb_etats_x++;
 }
-
-// Transitions étendues
-typedef struct Transition_x {
-    int cible;
-    int action_id;
-} Transition_x;
-
-Transition_x** transitions_x = NULL;
-int* nb_trans_x = NULL;
 
 void init_lts_x() {
     transitions_x = malloc(capacite_etats_x * sizeof(Transition_x*));
@@ -217,35 +210,51 @@ void init_lts_x() {
     }
 }
 
+int nb_trans_applicables(int etat, Variable var){
+    int val = 0;    
+    for (int i = 0; i < nb_trans_par_etat[etat]; i++) {
+        
+        int action = transitions[etat][i].label_action;
+       
+        if (constraints[action](var) == true) {
+            val++;
+        }
+    }
+    return val;
+}
+
 void appliquer_transition1(int index_source) {
     Etat_x source = etats_x[index_source];
     int etat_id = source.etat;
     int nb_transitions = nb_trans_par_etat[etat_id];
 
-    int nb_valides = nb_trans_applicables(etat_id, source.inter);
+    int nb_valides = nb_trans_applicables(etat_id, source.var);
     nb_trans_x[index_source] = nb_valides;
 
+    
     if (nb_valides == 0) {
         transitions_x[index_source] = NULL;
         return;
     }
 
     transitions_x[index_source] = malloc(nb_valides * sizeof(Transition_x));
-
+ 
+    
     int k = 0;
     for (int i = 0; i < nb_transitions; i++) {
         Transition t = transitions[etat_id][i];
         int action = t.label_action;
 
-        if (constraints[action](source.inter)) {
-            Intervalle nouvelles_inter = update_functions[action](source.inter);
-            int index_cible = ajouter_etat_x(t.etat_in, nouvelles_inter);
+        if (constraints[action](source.var)) {
+            Variable nouvelles_var = update_functions[action](source.var);
+            int index_cible = ajouter_etat_x(t.etat_in, nouvelles_var);
             transitions_x[index_source][k].cible = index_cible;
             transitions_x[index_source][k].action_id = action;
             k++;
         }
     }
 }
+
 
 void appliquer_transitions() {
     int i = 0;
@@ -257,30 +266,35 @@ void appliquer_transitions() {
 
 void print_lts_x() {
     for (int i = 0; i < nb_etats_x; i++) {
-        printf("├ëtat étendu #%d\n", i);
-        printf("\t├ëtat de base : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
-        printf("\tIntervalle   : x = [%d, %d]\n", etats_x[i].inter.min, etats_x[i].inter.max);
+        printf("Etat etendu ID #%d\n", i);
+        printf("\t Etat de base    : %s (ID %d)\n", etats[etats_x[i].etat], etats_x[i].etat);
+        printf("\t Variables       : v = %d\n", etats_x[i].var.v);
+        printf("\t Transitions sortantes :\n");
 
         for (int j = 0; j < nb_trans_x[i]; j++) {
             int id_cible = transitions_x[i][j].cible;
             int action_id = transitions_x[i][j].action_id;
-            printf("\t\t--%s--> #%d\n", actions[action_id], id_cible);
+            printf("\t\t   [%d] --%s--> [%d] \n", i, actions[action_id], id_cible);
         }
+
+        printf("\n");
     }
 }
-
+// MAIN
 int main() {
+    
     init_lts();
+    
+    init_variables();
     init_update_functions();
     init_constraints();
-
+    
     capacite_etats_x = 10000;
     init_lts_x();
-    ajouter_etat_x(0, intervalle_initial);  // x = [0,0] initial
+    ajouter_etat_x(0, variable);
     appliquer_transitions();
-
-    print_lts_x();  // Affiche tous les états étendus et leurs transitions
-    printf("Nombre total d'états étendus : %d\n", nb_etats_x);
+  //  print_lts_x();
+    printf("Nombre total d'etats etendus : %d\n", nb_etats_x);
 
     return 0;
 }
