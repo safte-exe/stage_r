@@ -1,32 +1,36 @@
 ////// Definition du modele
 
 ////Declaration des variables 
-#define nb_etats 4
-#define nb_actions 3
 
-char* etats[nb_etats];//Etats du LTS
-char* actions[nb_actions];//Actions du LTS
-int nb_trans_par_etat[nb_etats];//Nb de transitions sortantes pour chaque état
-Transition* transitions[nb_etats];//Transitions sortantes de chaque état
-Variable variable;//Data variables
-UpdateFunction update_functions[nb_actions];//Fonctions d'update
-Constraint constraints[nb_actions];//Contraintes
+//La structure des variables pour le modele actuel est la suivante 
+/*
+typedef struct Variable {
+    int v;
+} Variable;
+*/
 
-typedef struct {
-    int nb_etats;
-    int nb_actions;
-    char** etats;
-    char** actions;
-    int* nb_trans_par_etat;
-    Transition** transitions;
-    Variable variable;
-    UpdateFunction* update_functions;
-    Constraint* constraints;
-} LTS;
+char** etats;                     // Etats du LTS
+char** actions;                   // Actions du LTS
+int* nb_trans_par_etat;          // Nombre de transitions sortantes par état
+Transition** transitions;        // Transitions sortantes de chaque état
+Variable variable;               // Variable de données
+UpdateFunction* update_functions; // Fonctions d'update
+Constraint* constraints;         // Contraintes
 
 
 ////Initialisation LTS 
  void init_lts() {
+    
+    int nb_etats = 4;
+    int nb_actions = 3;
+
+    etats = malloc(nb_etats * sizeof(char*));
+    actions = malloc(nb_actions * sizeof(char*));
+    nb_trans_par_etat = malloc(nb_etats * sizeof(int));
+    transitions = malloc(nb_etats * sizeof(Transition*));
+    update_functions = malloc(nb_actions * sizeof(UpdateFunction));
+    constraints = malloc(nb_actions * sizeof(Constraint));
+
     etats[0] = "up";
     etats[1] = "left";
     etats[2] = "right";

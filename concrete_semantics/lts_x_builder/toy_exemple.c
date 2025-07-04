@@ -18,7 +18,7 @@ void init_lts() {
     int nb_etats = 4;
     int nb_actions = 3;
 
-     etats = malloc(nb_etats * sizeof(char*));
+    etats = malloc(nb_etats * sizeof(char*));
     actions = malloc(nb_actions * sizeof(char*));
     nb_trans_par_etat = malloc(nb_etats * sizeof(int));
     transitions = malloc(nb_etats * sizeof(Transition*));
