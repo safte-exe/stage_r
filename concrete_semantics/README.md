@@ -21,7 +21,7 @@ Il permet de simuler l'évolution d’un système en fonction de conditions et d
 
 ##  Utilisation de la bibliothèque `uthash`
 
-Le projet utilise [`uthash`](https://troydhanson.github.io/uthash/). `uthash` est une bibliothèque **header-only** en C utilisée pour la gestion de l'espace d'etat du LTS, afin de:
+Le projet utilise [`uthash`](https://troydhanson.github.io/uthash/userguide.html#_a_hash_in_c). `uthash` est une bibliothèque **header-only** en C utilisée pour la gestion de l'espace d'etat du LTS, afin de:
     -creer une table de hachage
     -eviter les doublons
     -accelerer la recherche drastiquement
@@ -30,16 +30,12 @@ Le projet utilise [`uthash`](https://troydhanson.github.io/uthash/). `uthash` es
 
 ## Utiliser les modèles dans le dossier Models
 
-1. Ouvrir `toy_exemple.c`
-2. Supprimer ou commenter les fonctions suivantes :
+On peut créer un nouveau modèle en modifiant les fonctions suivantes :
    - `init_lts()`
    - `init_variables()`
    - `init_update_functions()`
    - `init_constraints()`
-
-3. Copier-coller les mêmes fonctions depuis **le fichier exemple voulu** : `models/exemple_fig2a.c` ou `models/lts_extended_toy_exemple.c`
-
-Modifier déclaration des variables suivant la definition dans le header structure_variable
+ainsi que la déclaration des variables suivant la définition donnée dans le header `structure_variable`
 
 
 ---
@@ -47,6 +43,6 @@ Modifier déclaration des variables suivant la definition dans le header structu
 ##  Compilation et Execution
 
 1. La compilation est faite avec la ligne de commande : gcc -o executable_name main.c toy_exemple.c lts_extended_builder.c
-    On peut compiler avec l’un des fichiers exemples souhaités, comme models/exemple_fig2a.c ou models/lts_extended_toy_exemple.c, à la place de toy_exemple.c
+    On peut compiler avec l’un des fichiers exemples souhaités, comme `models/exemple_fig2a.c` ou `models/lts_extended_toy_exemple.c`, à la place de `toy_exemple.c`
 2. L'execution : ./executable_name 
 
