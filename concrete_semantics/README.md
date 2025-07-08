@@ -35,7 +35,7 @@ On peut créer un nouveau modèle en modifiant les fonctions suivantes :
    - `init_variables()`
    - `init_update_functions()`
    - `init_constraints()`
-ainsi que la déclaration des variables suivant la définition donnée dans le header `structure_variable`
+ainsi que la déclaration des variables dans le header `structure_variable.h`
 
 
 ---
