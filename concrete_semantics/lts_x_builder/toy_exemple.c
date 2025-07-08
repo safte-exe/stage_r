@@ -86,6 +86,9 @@ void init_constraints() {
     constraints[2] = const_c;
 }
 
+
+
+
 // --------------------- Remplir la structure LTS ---------------------
 
 void fill_lts_struct(LTS* lts) {
