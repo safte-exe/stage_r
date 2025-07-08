@@ -124,3 +124,21 @@ void init_constraints() {
     constraints[1] = const_b;
     constraints[2] = const_c;
 }
+
+
+// --------------------- Remplir la structure LTS ---------------------
+
+void fill_lts_struct(LTS* lts) {
+    init_lts();
+    init_variables();
+    init_update_functions();
+    init_constraints();
+
+    lts->etats = etats;
+    lts->actions = actions;
+    lts->nb_trans_par_etat = nb_trans_par_etat;
+    lts->transitions = transitions;
+    lts->variable = variable;
+    lts->update_functions = update_functions;
+    lts->constraints = constraints;
+}

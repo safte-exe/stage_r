@@ -8,13 +8,14 @@ Il permet de simuler l'évolution d’un système en fonction de conditions et d
 
 ## Structure des fichiers
 
-| Fichier                    | Rôle                                                                |
+| Fichier                    | Rôle                                                                 |
 |----------------------------|----------------------------------------------------------------------|
 | `main.c`                   | Point d’entrée. Appelle la construction du LTS étendu                |
 | `toy_exemple.c`            | Définit le LTS de base (états, transitions, actions, contraintes)    |
 | `lts_extended_builder.c`   | Contient l'algorithme de construction du LTS étendu                  |
 | `structure_lts.h`          | Définitions des structures : LTS, Transition, Contrainte, etc.       |
 | `structure_lts_extended.h` | Structures pour les états étendus, transitions étendues, etc.        |
+| `structure_variable.h`     | Définition de la structure des variables                             |
 
 ---
 
@@ -38,11 +39,14 @@ Le projet utilise [`uthash`](https://troydhanson.github.io/uthash/). `uthash` es
 
 3. Copier-coller les mêmes fonctions depuis **le fichier exemple voulu** : `models/exemple_fig2a.c` ou `models/lts_extended_toy_exemple.c`
 
+Modifier déclaration des variables suivant la definition dans le header structure_variable
+
 
 ---
 
 ##  Compilation et Execution
 
 1. La compilation est faite avec la ligne de commande : gcc -o executable_name main.c toy_exemple.c lts_extended_builder.c
+    On peut compiler avec l’un des fichiers exemples souhaités, comme models/exemple_fig2a.c ou models/lts_extended_toy_exemple.c, à la place de toy_exemple.c
 2. L'execution : ./executable_name 
 
