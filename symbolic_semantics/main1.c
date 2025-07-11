@@ -143,7 +143,7 @@ Valuation update_b(Valuation* in) {
 Valuation update_c(Valuation* in) {
     Valuation out = *in;
     out.vars[0].lower = out.vars[0].lower / 3.0;
-    out.vars[0].upper = out.vars[0].upper / 3.0;
+    out.vars[0].upper = out.vars[0].upper / 2.0;
     return out;
 }
 
