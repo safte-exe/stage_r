@@ -143,8 +143,7 @@ Valuation update_b(Valuation* in) {
 Valuation update_c(Valuation* in) {
     Valuation out = *in;
     out.vars[0].lower = out.vars[0].lower / 3.0;
-    out.vars[0].upper = out.vars[0].lower / 3.0;
-    afficher_valuation(&out);
+    out.vars[0].upper = out.vars[0].upper / 3.0;
     return out;
 }
 
@@ -311,7 +310,7 @@ void appliquer_transition1(int index_source) {
         Valuation garde = constraints[action]();
         Valuation inter = intersect_valuation(&source.val, &garde);
         if (is_empty_valuation(&inter)) continue;
-        afficher_valuation(&inter);
+     //   afficher_valuation(&inter);
         Valuation val_apres = update_functions[action](&inter);
         int index_cible = ajouter_etat_x(t.etat_in, val_apres);
         transitions_x[index_source][k].cible = index_cible;
