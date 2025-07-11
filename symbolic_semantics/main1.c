@@ -23,65 +23,41 @@ typedef struct Transition {
 Transition* transitions[max_etats];
 int nb_trans_par_etat[max_etats] = {0};
 
+
 void init_lts() {
-    etats[0] = "l0l1"; etats[1] = "l1l3"; etats[2] = "l0l40";
-    etats[3] = "l2l3"; etats[4] = "l0l3"; etats[5] = "l1l4";
-    etats[6] = "l0l3"; etats[7] = "l2l4"; etats[8] = "l0l41";
-    etats[9] = "l1l3"; etats[10] = "l2l3";
+    etats[0] = "up";
+    etats[1] = "left";
+    etats[2] = "right";
+    etats[3] = "down";
+    num_etats = 4;
+    actions[0] = "a";
+    actions[1] = "b";
+    actions[2] = "c";
 
-    num_etats = 11;
-    actions[0] = "a"; actions[1] = "b"; actions[2] = "c";
+    transitions[0] = malloc(2 * sizeof(Transition));
+    transitions[0][0] = (Transition){.etat_in = 1, .label_action = 0};
+    transitions[0][1] = (Transition){.etat_in = 2, .label_action = 1};
+    nb_trans_par_etat[0] = 2;
 
-    transitions[0] = malloc(3 * sizeof(Transition));
-    transitions[0][0] = (Transition){1, 0}; transitions[0][1] = (Transition){2, 2}; transitions[0][2] = (Transition){3, 0};
-    nb_trans_par_etat[0] = 3;
+    transitions[1] = malloc(1 * sizeof(Transition));
+    transitions[1][0] = (Transition){.etat_in = 3, .label_action = 1};
+    nb_trans_par_etat[1] = 1;
 
-    transitions[1] = malloc(2 * sizeof(Transition));
-    transitions[1][0] = (Transition){4, 2}; transitions[1][1] = (Transition){5, 2};
-    nb_trans_par_etat[1] = 2;
+    transitions[2] = malloc(1 * sizeof(Transition));
+    transitions[2][0] = (Transition){.etat_in = 3, .label_action = 0};
+    nb_trans_par_etat[2] = 1;
 
-    transitions[2] = malloc(3 * sizeof(Transition));
-    transitions[2][0] = (Transition){5, 0}; transitions[2][1] = (Transition){6, 1}; transitions[2][2] = (Transition){7, 0};
-    nb_trans_par_etat[2] = 3;
 
-    transitions[3] = malloc(2 * sizeof(Transition));
-    transitions[3][0] = (Transition){4, 1}; transitions[3][1] = (Transition){7, 2};
-    nb_trans_par_etat[3] = 2;
+    transitions[3] = malloc(1 * sizeof(Transition));
+    transitions[3][0] = (Transition){.etat_in = 0, .label_action = 2};
+    nb_trans_par_etat[3] = 1;
 
-    transitions[4] = malloc(1 * sizeof(Transition));
-    transitions[4][0] = (Transition){8, 2};
-    nb_trans_par_etat[4] = 1;
-
-    transitions[5] = malloc(2 * sizeof(Transition));
-    transitions[5][0] = (Transition){8, 2}; transitions[5][1] = (Transition){9, 1};
-    nb_trans_par_etat[5] = 2;
-
-    transitions[6] = malloc(2 * sizeof(Transition));
-    transitions[6][0] = (Transition){9, 0}; transitions[6][1] = (Transition){10, 0};
-    nb_trans_par_etat[6] = 2;
-
-    transitions[7] = malloc(2 * sizeof(Transition));
-    transitions[7][0] = (Transition){8, 1}; transitions[7][1] = (Transition){10, 1};
-    nb_trans_par_etat[7] = 2;
-
-    transitions[8] = malloc(1 * sizeof(Transition));
-    transitions[8][0] = (Transition){0, 1};
-    nb_trans_par_etat[8] = 1;
-
-    transitions[9] = malloc(1 * sizeof(Transition));
-    transitions[9][0] = (Transition){0, 2};
-    nb_trans_par_etat[9] = 1;
-
-    transitions[10] = malloc(1 * sizeof(Transition));
-    transitions[10][0] = (Transition){0, 1};
-    nb_trans_par_etat[10] = 1;
 }
-
 // Gestion des intervalles et valuations
 
 typedef struct {
-    int lower;
-    int upper;
+    float lower;
+    float upper;
     bool lower_closed;
     bool upper_closed;
 } Interval;
@@ -138,25 +114,37 @@ bool is_empty_valuation(Valuation* v) {
 
 // Fonctions d'update
 
+void afficher_valuation(Valuation* v) {
+     printf("\t Variables       : v =");
+    for (int i = 0; i < VAR_COUNT; i++) {
+        Interval ivl = v->vars[i];
+        printf("[");
+        printf(ivl.lower_closed ? "%f" : "(%d", ivl.lower);
+        printf(",");
+        printf(ivl.upper_closed ? "%f" : "%d)", ivl.upper);
+        printf("]\n");
+    }
+}
 
 Valuation update_a(Valuation* in) {
     Valuation out = *in;
-    out.vars[0].lower += 2;
+    //out.vars[0].lower += 2;
     out.vars[0].upper += 2;
     return out;
 }
 
 Valuation update_b(Valuation* in) {
     Valuation out = *in;
-    out.vars[0].lower -= 1;
-    out.vars[0].upper -= 1;
+    out.vars[0].lower *= 2;
+    out.vars[0].upper *= 2;
     return out;
 }
 
 Valuation update_c(Valuation* in) {
     Valuation out = *in;
-    out.vars[0].lower *= 2;
-    out.vars[0].upper *= 2;
+    out.vars[0].lower = out.vars[0].lower / 3.0;
+    out.vars[0].upper = out.vars[0].lower / 3.0;
+    afficher_valuation(&out);
     return out;
 }
 
@@ -171,19 +159,19 @@ UpdateFunction update_functions[nb_actions] = {update_a, update_b, update_c};
 
 Valuation const_a() {
     Valuation v;
-    v.vars[0] = (Interval){-10, 10, true, true};
+    v.vars[0] = (Interval){0, INT_MAX, true, true};
     return v;
 }
 
 Valuation const_b() {
     Valuation v;
-    v.vars[0] = (Interval){-10, 10, true, true};
+    v.vars[0] = (Interval){0, 5, true, true};
     return v;
 }
 
 Valuation const_c() {
     Valuation v;
-    v.vars[0] = (Interval){-10, 10, true, true};
+    v.vars[0] = (Interval){8, INT_MAX, true, true};
     return v;
 }
 
@@ -214,6 +202,21 @@ typedef struct {
 } EtatXHash;
 
 EtatXHash* etats_x_hash = NULL;
+bool egal_interval(Interval a, Interval b) {
+    return a.lower == b.lower &&
+           a.upper == b.upper &&
+           a.lower_closed == b.lower_closed &&
+           a.upper_closed == b.upper_closed;
+}
+
+bool egal_valuation(Valuation* v1, Valuation* v2) {
+    for (int i = 0; i < VAR_COUNT; i++) {
+        if (!egal_interval(v1->vars[i], v2->vars[i]))
+            return false;
+    }
+    return true;
+}
+
 
 int ajouter_etat_x(int etat_id, Valuation val) {
     EtatXKey key = {etat_id, val};
@@ -267,6 +270,9 @@ bool is_transition_applicable(int etat, Valuation* val, int action) {
     return !is_empty_valuation(&inter);
 }
 
+
+
+
 void appliquer_transition1(int index_source) {
 
 
@@ -305,7 +311,7 @@ void appliquer_transition1(int index_source) {
         Valuation garde = constraints[action]();
         Valuation inter = intersect_valuation(&source.val, &garde);
         if (is_empty_valuation(&inter)) continue;
-
+        afficher_valuation(&inter);
         Valuation val_apres = update_functions[action](&inter);
         int index_cible = ajouter_etat_x(t.etat_in, val_apres);
         transitions_x[index_source][k].cible = index_cible;
@@ -322,17 +328,6 @@ void appliquer_transitions() {
     }
 }
 
-void afficher_valuation(Valuation* v) {
-     printf("\t Variables       : v =");
-    for (int i = 0; i < VAR_COUNT; i++) {
-        Interval ivl = v->vars[i];
-        printf("[");
-        printf(ivl.lower_closed ? "%d" : "(%d", ivl.lower);
-        printf(",");
-        printf(ivl.upper_closed ? "%d" : "%d)", ivl.upper);
-        printf("]\n");
-    }
-}
 
 
 void print_lts_x() {
@@ -359,7 +354,7 @@ int main() {
     init_lts_x();
 
     Valuation val_init;
-    val_init.vars[0] = (Interval){3, 9, true, true}; // état initial valuation ponctuelle
+    val_init.vars[0] = (Interval){3, 3, true, true}; // état initial valuation ponctuelle
     ajouter_etat_x(0, val_init);
 
     appliquer_transitions();
