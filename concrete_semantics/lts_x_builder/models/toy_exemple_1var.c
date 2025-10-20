@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include "structure_lts.h"
+#include "../structure_lts.h"
+
 
 //// Déclaration des variables 
 char** etats;                     // Etats du LTS
