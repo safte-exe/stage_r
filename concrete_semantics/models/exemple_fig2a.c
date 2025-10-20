@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdbool.h>
+#include "structure_lts.h"
 ////// Definition du modele
 
 ////Declaration des variables 

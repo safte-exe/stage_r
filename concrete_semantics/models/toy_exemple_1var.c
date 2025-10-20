@@ -1,26 +1,23 @@
-
-////// Definition du modele
 #include <stdlib.h>
 #include <stdbool.h>
 #include "structure_lts.h"
 
-////Declaration des variables 
+//// Déclaration des variables 
+char** etats;                     // Etats du LTS
+char** actions;                   // Actions du LTS
+int* nb_trans_par_etat;          // Nombre de transitions sortantes par état
+Transition** transitions;        // Transitions sortantes de chaque état
+Variable variable;               // Variable de données
+UpdateFunction* update_functions; // Fonctions d'update
+Constraint* constraints;         // Contraintes
 
-
-char* etats[nb_etats];//Etats du LTS
-char* actions[nb_actions];//Actions du LTS
-int nb_trans_par_etat[nb_etats];//Nb de transitions sortantes pour chaque état
-Transition* transitions[nb_etats];//Transitions sortantes de chaque état
-Variable variable;//Data variables
-UpdateFunction update_functions[nb_actions];//Fonctions d'update
-Constraint constraints[nb_actions];//Contraintes
-
-////Initialisation LTS 
+//// Initialisation LTS 
 
 void init_lts() {
     int nb_etats = 4;
     int nb_actions = 3;
 
+    // Allocation dynamique de mémoire pour les tableaux
     etats = malloc(nb_etats * sizeof(char*));
     actions = malloc(nb_actions * sizeof(char*));
     nb_trans_par_etat = malloc(nb_etats * sizeof(int));
@@ -28,18 +25,18 @@ void init_lts() {
     update_functions = malloc(nb_actions * sizeof(UpdateFunction));
     constraints = malloc(nb_actions * sizeof(Constraint));
 
-    // Etats
+    // Initialisation des états
     etats[0] = "up";
     etats[1] = "left";
     etats[2] = "right";
     etats[3] = "down";
 
-    // Actions
+    // Initialisation des actions
     actions[0] = "a";
     actions[1] = "b";
     actions[2] = "c";
 
-    // Transitions
+    // Initialisation des transitions
     transitions[0] = malloc(2 * sizeof(Transition));
     transitions[0][0] = (Transition){.etat_in = 1, .label_action = 0};
     transitions[0][1] = (Transition){.etat_in = 2, .label_action = 1};
@@ -58,18 +55,31 @@ void init_lts() {
     nb_trans_par_etat[3] = 1;
 }
 
-
-// --------------------- Initialisation des variables ---------------------
+//// Initialisation des variables 
 
 void init_variables() { 
     variable.v = 0;
 }
 
-// --------------------- Update functions ---------------------
+//// Fonctions d'update 
 
-Variable update_a(Variable var) { if (var.v * 2 <= 10) { var.v *= 2; } return var; }
-Variable update_b(Variable var) { if (var.v + 2 <= 10) { var.v += 2; } return var; }
-Variable update_c(Variable var) { return var; }
+Variable update_a(Variable var) { 
+    if (var.v * 2 <= 10) { 
+        var.v *= 2; 
+    } 
+    return var; 
+}
+
+Variable update_b(Variable var) { 
+    if (var.v + 2 <= 10) { 
+        var.v += 2; 
+    } 
+    return var; 
+}
+
+Variable update_c(Variable var) { 
+    return var; 
+}
 
 void init_update_functions() {
     update_functions[0] = update_a;
@@ -77,10 +87,12 @@ void init_update_functions() {
     update_functions[2] = update_c;
 }
 
-// --------------------- Contraintes ---------------------
+//// Contraintes 
 
 bool const_a(Variable var) { return true; }
+
 bool const_b(Variable var) { return true; }
+
 bool const_c(Variable var) { return true; }
 
 void init_constraints() {
@@ -89,8 +101,7 @@ void init_constraints() {
     constraints[2] = const_c;
 }
 
-
-// --------------------- Remplir la structure LTS ---------------------
+//// Remplir la structure LTS 
 
 void fill_lts_struct(LTS* lts) {
     init_lts();
@@ -106,5 +117,3 @@ void fill_lts_struct(LTS* lts) {
     lts->update_functions = update_functions;
     lts->constraints = constraints;
 }
-
-
